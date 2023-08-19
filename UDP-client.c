@@ -95,7 +95,7 @@ int initialization( struct sockaddr ** internet_address, socklen_t * internet_ad
     memset( &internet_address_setup, 0, sizeof internet_address_setup );
     internet_address_setup.ai_family = AF_UNSPEC;
     internet_address_setup.ai_socktype = SOCK_DGRAM;
-    int getaddrinfo_return = getaddrinfo( "::1", "51110", &internet_address_setup, &internet_address_result );
+    int getaddrinfo_return = getaddrinfo( "::1", "62498", &internet_address_setup, &internet_address_result );
     if( getaddrinfo_return != 0 )
     {
         fprintf( stderr, "getaddrinfo: %s\n", gai_strerror( getaddrinfo_return ) );
@@ -149,6 +149,8 @@ void EstablishUpConnection( int internet_socket, struct sockaddr * internet_addr
 void execution( int internet_socket, struct sockaddr * internet_address, socklen_t internet_address_length )
 {
     printf("execution started\n");
+    int ReceivedNumbers[42]={0};
+    int ReceivedNumbersIndex=0;
 
     while (GlobalSendTimeout == 0)
     {
@@ -157,7 +159,7 @@ void execution( int internet_socket, struct sockaddr * internet_address, socklen
         FD_SET(internet_socket, &readfds);
 
         struct timeval timeout;
-        timeout.tv_sec = 1;
+        timeout.tv_sec = 15;
         timeout.tv_usec = 0;
 
         int select_result = select(internet_socket + 1, &readfds, NULL, NULL, &timeout);
@@ -191,6 +193,11 @@ void execution( int internet_socket, struct sockaddr * internet_address, socklen
                 buffer[number_of_bytes_received] = '\0';
                 printf("Received : %s\n", buffer);
             }
+            printf("%s",buffer);
+
+            int BufferFormatted = atoi(buffer);
+            ReceivedNumbers[ReceivedNumbersIndex]=BufferFormatted;
+            ReceivedNumbersIndex++;
         }
     }
     if (GlobalSendTimeout == 1)
@@ -203,9 +210,10 @@ void execution( int internet_socket, struct sockaddr * internet_address, socklen
         }
         GlobalSendTimeout =2;
     }
-
-//ontvangen data verwerken en terugsturen naar Server
-////////}
+    for (int i = 0; i < 42; ++i)
+    {
+        printf("%d\n",ReceivedNumbers[i]);
+    }
 
 }
 
