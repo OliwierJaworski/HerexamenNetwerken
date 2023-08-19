@@ -38,11 +38,6 @@ void OSCleanup( void )
 	void OSCleanup( void ) {}
 #endif
 
-int GlobalSendTimeout = 0;
-//0=data ontvangen
-//1=data sturen
-//2=connectie afsluiten
-//3=cleanup
 
 int initialization( struct sockaddr ** internet_address, socklen_t * internet_address_length );
 void EstablishUpConnection( int internet_socket, struct sockaddr * internet_address, socklen_t internet_address_length );
@@ -52,8 +47,6 @@ void cleanup( int internet_socket, struct sockaddr * internet_address );
 
 int main( int argc, char * argv[] )
 {
-
-    printf("programma start\n");
     //////////////////
     //Initialization//
     //////////////////
@@ -70,11 +63,10 @@ int main( int argc, char * argv[] )
     EstablishUpConnection(internet_socket, internet_address, internet_address_length);
 
 
-    while(GlobalSendTimeout < 2)
-    {
-        execution(internet_socket, internet_address, internet_address_length);
-        printf("executed file");
-    }
+
+    execution(internet_socket, internet_address, internet_address_length);
+
+
 
     ////////////
     //Clean up//
@@ -95,7 +87,7 @@ int initialization( struct sockaddr ** internet_address, socklen_t * internet_ad
     memset( &internet_address_setup, 0, sizeof internet_address_setup );
     internet_address_setup.ai_family = AF_UNSPEC;
     internet_address_setup.ai_socktype = SOCK_DGRAM;
-    int getaddrinfo_return = getaddrinfo( "::1", "62498", &internet_address_setup, &internet_address_result );
+    int getaddrinfo_return = getaddrinfo( "::1", "52044", &internet_address_setup, &internet_address_result );
     if( getaddrinfo_return != 0 )
     {
         fprintf( stderr, "getaddrinfo: %s\n", gai_strerror( getaddrinfo_return ) );
@@ -149,40 +141,79 @@ void EstablishUpConnection( int internet_socket, struct sockaddr * internet_addr
 void execution( int internet_socket, struct sockaddr * internet_address, socklen_t internet_address_length )
 {
     printf("execution started\n");
-    int ReceivedNumbers[42]={0};
     int ReceivedNumbersIndex=0;
+    int ReceivedNumbers[41]={0};
 
-    while (GlobalSendTimeout == 0)
+
+    //while(strcmp(EndRequest, buffercheck) != 0)
+    while(1)
     {
         fd_set readfds;
         FD_ZERO(&readfds);
         FD_SET(internet_socket, &readfds);
 
         struct timeval timeout;
-        timeout.tv_sec = 15;
+        timeout.tv_sec = 5;
         timeout.tv_usec = 0;
 
         int select_result = select(internet_socket + 1, &readfds, NULL, NULL, &timeout);
-
-        printf("after select\n");
 
         if (select_result == -1)
         {
             perror("select");
             return;
         }
+
         else if (select_result == 0)
         {
-            printf("Timeout occurred\n");
-            GlobalSendTimeout=1;
+            printf("timeout\n");
+            int HighestNumber = 0;
+            int CurrentNumber = 0;
 
+            int number_of_bytes_received = 0;
+            char buffer[1000];
+
+            for (int i = 0; i < 42; ++i)
+            {
+                printf("%d",ReceivedNumbers[i]);
+
+                CurrentNumber = ReceivedNumbers[i];
+                if (CurrentNumber > HighestNumber) {
+                    HighestNumber = CurrentNumber;
+                }
+            }
+
+            printf("\nwriting\n");
+
+            char highestNumberStr[10];
+            printf("%d",HighestNumber);
+            snprintf(highestNumberStr, sizeof(highestNumberStr), "%d", HighestNumber);
+
+            int number_of_bytes_send = 0;
+            number_of_bytes_send = sendto(internet_socket, highestNumberStr, strlen(highestNumberStr), 0,
+                                          internet_address, internet_address_length);
+
+            if (number_of_bytes_send == -1) {
+                perror("sendto");
+            }
+            printf("\nreceived numbers:%d\n", ReceivedNumbersIndex);
+            for (int i = 0; i < 42; ++i)
+            {
+                ReceivedNumbers[i]=0;
+            }
+            ReceivedNumbersIndex=0;
         }
+
         else
         {
+            char EndRequest[3] ="OK";
+
+            printf("reading\n");
             int number_of_bytes_received = 0;
             char buffer[1000];
             number_of_bytes_received = recvfrom(internet_socket, buffer, (sizeof buffer) - 1, 0, internet_address,
                                                 &internet_address_length);
+
             if (number_of_bytes_received == -1)
             {
                 perror("recvfrom");
@@ -192,29 +223,18 @@ void execution( int internet_socket, struct sockaddr * internet_address, socklen
             {
                 buffer[number_of_bytes_received] = '\0';
                 printf("Received : %s\n", buffer);
+                ReceivedNumbers[ReceivedNumbersIndex]= atoi(buffer);
+                ReceivedNumbersIndex++;
             }
-            printf("%s",buffer);
 
-            int BufferFormatted = atoi(buffer);
-            ReceivedNumbers[ReceivedNumbersIndex]=BufferFormatted;
-            ReceivedNumbersIndex++;
-        }
-    }
-    if (GlobalSendTimeout == 1)
-    {
-        int number_of_bytes_send = 0;
-        number_of_bytes_send = sendto( internet_socket, "GO", 2, 0, internet_address, internet_address_length );
-        if( number_of_bytes_send == -1 )
-        {
-            perror( "sendto" );
-        }
-        GlobalSendTimeout =2;
-    }
-    for (int i = 0; i < 42; ++i)
-    {
-        printf("%d\n",ReceivedNumbers[i]);
-    }
+            if (strncmp(EndRequest, buffer, strlen(EndRequest)) != 0)
+            {
 
+            }
+        }
+
+
+    }
 }
 
 void cleanup( int internet_socket, struct sockaddr * internet_address )
