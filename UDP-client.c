@@ -227,9 +227,10 @@ void execution( int internet_socket, struct sockaddr * internet_address, socklen
                 ReceivedNumbersIndex++;
             }
 
-            if (strncmp(EndRequest, buffer, strlen(EndRequest)) != 0)
+            if (strncmp(EndRequest, buffer, strlen(EndRequest)) == 0)
             {
-
+                printf("Received OK message, stopping execution\n");
+                break; // Exit the while loop
             }
         }
 
