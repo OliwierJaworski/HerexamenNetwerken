@@ -1,0 +1,5 @@
+# ninja log v5
+660	759	7142869708519375	TCP_server.exe	af6747bf965c504e
+2	660	7142869707538483	CMakeFiles/TCP_server.dir/ServerTCP.c.obj	b9cee1395fd469d5
+3	576	7142870852126014	CMakeFiles/TCP_server.dir/ServerTCP.c.obj	b9cee1395fd469d5
+576	651	7142870852856681	TCP_server.exe	af6747bf965c504e

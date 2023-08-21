@@ -1,0 +1,3 @@
+C:/Users/Oliwier/Desktop/TCPBewerkingen/tcp-client/cmake-build-debug/CMakeFiles/tcp_client.dir
+C:/Users/Oliwier/Desktop/TCPBewerkingen/tcp-client/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/Oliwier/Desktop/TCPBewerkingen/tcp-client/cmake-build-debug/CMakeFiles/rebuild_cache.dir
